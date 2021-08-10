@@ -1,0 +1,21 @@
+{
+    "name": "leo/data_dictionary",
+    "description": "``MySQL```````",
+    "type": "library",
+    "require": {
+        "php": "8.0.6"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "DictionaryExport\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "leo",
+            "email": "leo2768@163.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}
