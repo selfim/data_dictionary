@@ -4,7 +4,7 @@ declare (strict_types=1);
 
 namespace DictionaryExport;
 
-
+use PDO;
 class DataDict
 {
     protected $db;
@@ -29,7 +29,6 @@ class DataDict
     {
         $list = $tmp = [];
         $res = $this->db->query("SHOW TABLE STATUS");
-        //echo'<pre>';var_export($res);die();
         while ( $row =  $res->fetch(PDO::FETCH_ASSOC)) {
             //$tables [] ['TABLE_NAME'] = current($row);
             $tmp['name']    = $row['Name'];
