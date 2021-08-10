@@ -1,5 +1,5 @@
 {
-    "name": "leo/data_dictionary",
+    "name": "selfim/data_dictionary",
     "description": "``MySQL```````",
     "type": "library",
     "require": {
