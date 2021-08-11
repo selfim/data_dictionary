@@ -1,9 +1,9 @@
 # Introduction
-mysql data dictionary export
+PHP导出MySQL数据库数据字典 可以导出为Word文档和Excel表格以及Markdown、HTML格式
 
 # Install
 ```
-composer require selfim/data_dictionary @dev
+composer require selfim/data_dictionary 
 ```
 # Demo
 ```
