@@ -8,6 +8,7 @@ composer require selfim/data_dictionary @dev
 # Demo
 ```
 require __DIR__ . '/vendor/autoload.php';
-$dataObj = new DataDict(['dbname'=>'xxx','host'=>'localhost','user'=>'root','password'=>'xxx']);
-$res = $dataObj->make('html');
+$result = DataDict::init(['dbname'=>'your database','host'=>'your host','user'=>'username','password'=>'password'])
+    ->make('html');
+print_r($result);
 ```
