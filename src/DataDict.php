@@ -129,7 +129,9 @@ table td{height:25px; font-size:12px; border:3px solid #fff; background-color:#f
 </style>
 </head>
 <body>';
-        return  $header.'<h1 style="text-align:center;">' . $title . '</h1>'.$html.'</body></html>';
+        return  $header.'<h1 style="text-align:center;">' . $title . '</h1>'.$html.
+            '<p style="text-align:left;margin:20px auto;">总共：' . count($tables) . '个数据表</p>'.
+            '</body></html>';
 
     }
     protected  function generateJson()
