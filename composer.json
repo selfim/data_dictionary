@@ -3,7 +3,7 @@
     "description": "``MySQL```````",
     "type": "library",
     "require": {
-        "php": "8.0.6"
+        "php": ">=7.0"
     },
     "license": "MIT",
     "autoload": {
