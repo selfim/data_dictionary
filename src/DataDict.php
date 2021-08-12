@@ -8,20 +8,23 @@ use PDO;
 class DataDict
 {
     protected $db;
-    protected  $database;
+    protected $database;
     public $htmlTable = ''; //表格内容
     public $tables = []; //读取的表信息数组
+
     public function __construct(array $config)
     {
         $this->database = $config['dbname'];
-        $this->db = new PDO('mysql:dbname='.$config['dbname'].';host='.$config['host'], $config['user'], $config['password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $this->db = new PDO('mysql:dbname=' . $config['dbname'] . ';host=' . $config['host'], $config['user'], $config['password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
         $this->db->query('SET NAMES utf8');
     }
+
     public static function init(array $config): DataDict
     {
         return new self($config);
     }
-    public  function make(string $type = 'markdown')
+
+    public function make(string $type = 'markdown')
     {
         switch ($type) {
             case 'html':
@@ -40,14 +43,14 @@ class DataDict
     public function common()
     {
         $tables = $this->getTables();
-        foreach ( $tables as $k => $v ) {
+        foreach ($tables as $k => $v) {
 
             $sql = 'SELECT * FROM ';
             $sql .= 'INFORMATION_SCHEMA.TABLES ';
             $sql .= 'WHERE ';
             $sql .= "table_name = '{$v['name']}'  AND table_schema = '{$this->database}'";
-            $res = $this->db->query ( $sql );
-            while ( $t = $res->fetch(PDO::FETCH_ASSOC) ) {
+            $res = $this->db->query($sql);
+            while ($t = $res->fetch(PDO::FETCH_ASSOC)) {
                 $tables [$k] ['TABLE_COMMENT'] = $t ['TABLE_COMMENT'];
             }
 
@@ -57,17 +60,17 @@ class DataDict
             $sql .= "table_name = '{$v['name']}' AND table_schema = '{$this->database}'";
 
             $fields = [];
-            $res = $this->db->query ( $sql );
-            while ( $t = $res->fetch(PDO::FETCH_ASSOC) ) {
+            $res = $this->db->query($sql);
+            while ($t = $res->fetch(PDO::FETCH_ASSOC)) {
                 $fields [] = $t;
             }
             $tables [$k] ['COLUMN'] = $fields;
 
             //索引
             $index = [];
-            $sql = 'SHOW INDEX FROM '."{$v['name']}";
-            $res = $this->db->query ( $sql );
-            while ( $i = $res->fetch(PDO::FETCH_ASSOC) ) {
+            $sql = 'SHOW INDEX FROM ' . "{$v['name']}";
+            $res = $this->db->query($sql);
+            while ($i = $res->fetch(PDO::FETCH_ASSOC)) {
 
                 $index[] = $i;
             }
@@ -75,15 +78,15 @@ class DataDict
         }
         //组装HTML
         $html = '';
-        foreach ( $tables as $k => $v ) {
+        foreach ($tables as $k => $v) {
             $html .= '<table  border="1" cellspacing="0" cellpadding="0" align="center">';
             $html .= '<caption>' . $v ['name'] . '  ' . $v ['TABLE_COMMENT'] . '</caption>';
             $html .= '<tbody><tr><th>字段名</th><th>数据类型</th><th>默认值</th>
                         <th>允许非空</th>
-            <th>自动递增</th><th>备注(字段数: '. count($v['COLUMN']).')</th></tr>';
+            <th>自动递增</th><th>备注(字段数: ' . count($v['COLUMN']) . ')</th></tr>';
             $html .= '';
 
-            foreach ( $v ['COLUMN'] as $f ) {
+            foreach ($v ['COLUMN'] as $f) {
                 $html .= '<tr><td class="c1">' . $f ['COLUMN_NAME'] . '</td>';
                 $html .= '<td class="c2">' . $f ['COLUMN_TYPE'] . '</td>';
                 $html .= '<td class="c3"> ' . $f ['COLUMN_DEFAULT'] . '</td>';
@@ -95,10 +98,10 @@ class DataDict
             if (!empty($v['INDEX'])) {
                 $html .= '<tr><th colspan="2">索引名</th><th colspan="4">索引顺序</th></tr>';
                 foreach ($v['INDEX'] as $indexName => $indexContent) {
-                    $html .= '<tr>'.PHP_EOL;
-                    $html .= '<td class="c7" colspan="2">' . $indexName . '</td>'.PHP_EOL;
-                    $html .= '<td class="c8" colspan="4">' . implode(' > ', $indexContent) . '</td>'.PHP_EOL;
-                    $html .= '</tr>'.PHP_EOL;
+                    $html .= '<tr>' . PHP_EOL;
+                    $html .= '<td class="c7" colspan="2">' . $indexName . '</td>' . PHP_EOL;
+                    $html .= '<td class="c8" colspan="4">' . implode(' > ', $indexContent) . '</td>' . PHP_EOL;
+                    $html .= '</tr>' . PHP_EOL;
                 }
             }
             $html .= '</tbody></table></p>';
@@ -109,19 +112,20 @@ class DataDict
         return $this;
     }
 
-    protected  function getTables()
+    protected function getTables()
     {
         $list = $tmp = [];
         $res = $this->db->query("SHOW TABLE STATUS");
-        while ( $row =  $res->fetch(PDO::FETCH_ASSOC)) {
-            $tmp['name']    = $row['Name'];
+        while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
+            $tmp['name'] = $row['Name'];
             $tmp['comment'] = $row['Comment'];
-            $tmp['engine']  = $row['Engine'];
-            $list[]         = $tmp;
+            $tmp['engine'] = $row['Engine'];
+            $list[] = $tmp;
         }
         unset($tmp);
         return $list;
     }
+
     protected function getColumns(string $table)
     {
         if (empty($table)) {
@@ -129,34 +133,36 @@ class DataDict
         }
         $list = $tmp = [];
         $columns = $this->db->query('SHOW FULL COLUMNS FROM ' . $table);
-        while ( $row =  $columns->fetch(PDO::FETCH_ASSOC)) {
-            $tmp['field']     = $row['Field'];
-            $tmp['type']      = $row['Type'];
+        while ($row = $columns->fetch(PDO::FETCH_ASSOC)) {
+            $tmp['field'] = $row['Field'];
+            $tmp['type'] = $row['Type'];
             $tmp['collation'] = $row['Collation'];
-            $tmp['default']   = $row['Default'];
-            $tmp['null']      = $row['Null'];
-            $tmp['extra']     = $row['Extra'];
-            $tmp['comment']   = $row['Comment'];
-            $list[]           = $tmp;
+            $tmp['default'] = $row['Default'];
+            $tmp['null'] = $row['Null'];
+            $tmp['extra'] = $row['Extra'];
+            $tmp['comment'] = $row['Comment'];
+            $list[] = $tmp;
         }
         unset($tmp);
         return $list;
     }
-    protected  function getIndexInfo($arrIndexInfo)
+
+    protected function getIndexInfo($arrIndexInfo)
     {
         $index = [];
         foreach ($arrIndexInfo as $v) {
             $unique = ($v['Non_unique'] == 0) ? '(unique)' : '';
             // $index[$v['Key_name']][] = $v['Seq_in_index'].': '.$v['Column_name'].$unique;
-            $index[$v['Key_name']][] = $v['Column_name'].$unique;
+            $index[$v['Key_name']][] = $v['Column_name'] . $unique;
         }
 
         return $index;
     }
-    protected  function generateHtml()
+
+    protected function generateHtml()
     {
         $this->common();
-        $title = $this->database. '数据字典';
+        $title = $this->database . '数据字典';
 
         $header = '<!DOCTYPE html>
                 <html lang="en">
@@ -181,11 +187,12 @@ class DataDict
                 </style>
                 </head>
                 <body>';
-        return $header . '<h1 style="text-align:center;">' . $title . '</h1>'  .
-            '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) .'个数据表'."&nbsp".'生成时间：' . date('Y-m-d H:i:s'). '</p></header>'
-            .$this->htmlTable. '</body></html>';
+        return $header . '<h1 style="text-align:center;">' . $title . '</h1>' .
+            '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) . '个数据表' . "&nbsp" . '生成时间：' . date('Y-m-d H:i:s') . '</p></header>'
+            . $this->htmlTable . '</body></html>';
 
     }
+
     protected function generateDoc()
     {
         header("Content-type:text/html;charset=utf-8");
@@ -195,7 +202,7 @@ class DataDict
         header('Cache-Control: max-age=0');
         header("Content-Disposition:attachment;filename={$this->database}数据字典.docx");
         $this->common();
-        $title = $this->database. '数据字典';
+        $title = $this->database . '数据字典';
 
 
         $header = '<!DOCTYPE html>
@@ -221,17 +228,18 @@ class DataDict
                 </style>
                 </head>
                 <body>';
-        $data = $header . '<h1 style="text-align:center;">' . $title . '</h1>'  .
-            '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) .'个数据表'."&nbsp".'生成时间：' . date('Y-m-d H:i:s'). '</p></header>'
-            .$this->htmlTable. '</body></html>';
+        $data = $header . '<h1 style="text-align:center;">' . $title . '</h1>' .
+            '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) . '个数据表' . "&nbsp" . '生成时间：' . date('Y-m-d H:i:s') . '</p></header>'
+            . $this->htmlTable . '</body></html>';
         echo $data;
     }
+
     protected function generateXls()
     {
         header("Content-type: application/vnd.ms-excel; charset=gbk");
         header("Content-Disposition: attachment; filename={$this->database}数据字典.xls");
         $this->common();
-        $title = $this->database. '数据字典';
+        $title = $this->database . '数据字典';
 
 
         $header = '<!DOCTYPE html>
@@ -257,12 +265,13 @@ class DataDict
                 </style>
                 </head>
                 <body>';
-        $data = $header . '<h1 style="text-align:center;">' . $title . '</h1>'  .
-            '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) .'个数据表'."&nbsp".'生成时间：' . date('Y-m-d H:i:s'). '</p></header>'
-            .$this->htmlTable. '</body></html>';
+        $data = $header . '<h1 style="text-align:center;">' . $title . '</h1>' .
+            '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) . '个数据表' . "&nbsp" . '生成时间：' . date('Y-m-d H:i:s') . '</p></header>'
+            . $this->htmlTable . '</body></html>';
         echo $data;
     }
-    protected  function generateJson()
+
+    protected function generateJson()
     {
         $tables = $this->getTables();
         //循环所有表
@@ -272,20 +281,55 @@ class DataDict
         unset($val);
         return json_encode($tables);
     }
-    protected  function generateMd()
+
+    protected function generateMd()
     {
-        $title = $this->database. '数据字典';
-        $mark   = '';
+        $title = $this->database . '数据字典';
         $tables = $this->getTables();
-        //循环所有表
+        foreach ($tables as $k => $v) {
+
+            $sql = 'SELECT * FROM ';
+            $sql .= 'INFORMATION_SCHEMA.TABLES ';
+            $sql .= 'WHERE ';
+            $sql .= "table_name = '{$v['name']}'  AND table_schema = '{$this->database}'";
+            $res = $this->db->query($sql);
+            while ($t = $res->fetch(PDO::FETCH_ASSOC)) {
+                $tables [$k] ['TABLE_COMMENT'] = $t ['TABLE_COMMENT'];
+            }
+
+            $fields = [];
+            $columns = $this->db->query('SHOW FULL COLUMNS FROM ' . $v['name']);
+            while ($t = $columns->fetch(PDO::FETCH_ASSOC)) {
+                $fields [] = $t;
+            }
+            $tables [$k] ['COLUMN'] = $fields;
+
+            //索引
+            $index = [];
+            $sql = 'SHOW INDEX FROM ' . "{$v['name']}";
+            $res = $this->db->query($sql);
+            while ($i = $res->fetch(PDO::FETCH_ASSOC)) {
+
+                $index[] = $i;
+            }
+            $tables [$k] ['INDEX'] = $this->getIndexInfo($index);
+        }
+        $mark = '';
         foreach ($tables as $val) {
-            $info = $this->getColumns($val['name']);
+
             $mark .= '## ' . $val['name'] . ' 【' . $val['engine'] . '】 ' . $val['comment'] . PHP_EOL;
             $mark .= '' . PHP_EOL;
             $mark .= '|  字段名  |  数据类型  |  默认值  |  允许非空  |  自动递增  |  备注  |' . PHP_EOL;
             $mark .= '| ------ | ------ | ------ | ------ | ------ | ------ |' . PHP_EOL;
-            foreach ($info as $item) {
-                $mark .= '| ' . $item['field'] . ' | ' . $item['type'] . ' | ' . $item['default'] . ' | ' . $item['null'] . ' | ' . ($item['extra'] == 'auto_increment' ? '是' : '') . ' | ' . (empty($item['comment']) ? '-' : str_replace('|', '/', $item['comment'])) . ' |' . PHP_EOL;
+            foreach ($val['COLUMN'] as $item) {
+                $mark .= '| ' . $item['Field'] . ' | ' . $item['Type'] . ' | ' . $item['Default'] . ' | ' . $item['Null'] . ' | ' . ($item['Extra'] == 'auto_increment' ? '是' : '') . ' | ' . (empty($item['Comment']) ? '-' : str_replace('|', '/', $item['Comment'])) . ' |' . PHP_EOL;
+            }
+            if (!empty($val['INDEX'])) {
+                $mark .= '|  索引名  |  索引顺序  |' . PHP_EOL;
+                $mark .= '| ------ |------ |' . PHP_EOL;
+                foreach ($val['INDEX'] as $indexName => $indexContent) {
+                    $mark .= '| ' . $indexName . ' | ' . implode(' > ', $indexContent) . ' | ' . PHP_EOL;
+                }
             }
             $mark .= '' . PHP_EOL;
         }
