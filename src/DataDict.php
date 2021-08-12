@@ -11,6 +11,7 @@ class DataDict
     protected $database;
     public $htmlTable = ''; //表格内容
     public $tables = []; //读取的表信息数组
+    public $exportTables = []; // 要导出的表
 
     public function __construct(array $config)
     {
@@ -117,10 +118,20 @@ class DataDict
         $list = $tmp = [];
         $res = $this->db->query("SHOW TABLE STATUS");
         while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
-            $tmp['name'] = $row['Name'];
-            $tmp['comment'] = $row['Comment'];
-            $tmp['engine'] = $row['Engine'];
-            $list[] = $tmp;
+            if (!empty($this->exportTables)) {
+                if (in_array($row['Name'], $this->exportTables)) {
+                    $tmp['name'] = $row['Name'];
+                    $tmp['comment'] = $row['Comment'];
+                    $tmp['engine'] = $row['Engine'];
+                    $list[] = $tmp;
+                }
+            } else {
+                $tmp['name'] = $row['Name'];
+                $tmp['comment'] = $row['Comment'];
+                $tmp['engine'] = $row['Engine'];
+                $list[] = $tmp;
+            }
+
         }
         unset($tmp);
         return $list;
@@ -164,11 +175,10 @@ class DataDict
         $this->common();
         $title = $this->database . '数据字典';
 
-        $header = '<!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>' . $title . '</title>
+        $html = '<!DOCTYPE html>
+              <html>
+              <meta charset="utf-8">
+              <title>' . $title . '数据字典</title>
                 <style>
                 body,td,th {font-family:"宋体"; font-size:12px;}
                 table{border-collapse:collapse;border:1px solid #CCC;background:#6089D4;}
@@ -187,9 +197,11 @@ class DataDict
                 </style>
                 </head>
                 <body>';
-        return $header . '<h1 style="text-align:center;">' . $title . '</h1>' .
-            '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) . '个数据表' . "&nbsp" . '生成时间：' . date('Y-m-d H:i:s') . '</p></header>'
-            . $this->htmlTable . '</body></html>';
+        $html .= '<h1 style="text-align:center;">' . $title . '</h1>';
+        $html .= '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) . '个数据表' . "&nbsp" . '生成时间：' . date('Y-m-d H:i:s') . '</p></header>';
+        $html .= $this->htmlTable;
+        $html .= '</body></html>';
+        echo $html;
 
     }
 
@@ -205,11 +217,10 @@ class DataDict
         $title = $this->database . '数据字典';
 
 
-        $header = '<!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>' . $title . '</title>
+        $html = '<!DOCTYPE html>
+              <html>
+              <meta charset="utf-8">
+              <title>' . $title . '数据字典</title>
                 <style>
                 body,td,th {font-family:"宋体"; font-size:12px;}
                 table{border-collapse:collapse;border:1px solid #CCC;background:#6089D4;}
@@ -228,10 +239,11 @@ class DataDict
                 </style>
                 </head>
                 <body>';
-        $data = $header . '<h1 style="text-align:center;">' . $title . '</h1>' .
-            '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) . '个数据表' . "&nbsp" . '生成时间：' . date('Y-m-d H:i:s') . '</p></header>'
-            . $this->htmlTable . '</body></html>';
-        echo $data;
+        $html .= '<h1 style="text-align:center;">' . $title . '</h1>';
+        $html .= '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) . '个数据表' . "&nbsp" . '生成时间：' . date('Y-m-d H:i:s') . '</p></header>';
+        $html .= $this->htmlTable;
+        $html .= '</body></html>';
+        echo $html;
     }
 
     protected function generateXls()
@@ -242,11 +254,10 @@ class DataDict
         $title = $this->database . '数据字典';
 
 
-        $header = '<!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>' . $title . '</title>
+        $html = '<!DOCTYPE html>
+              <html>
+              <meta charset="utf-8">
+              <title>' . $title . '数据字典</title>
                 <style>
                 body,td,th {font-family:"宋体"; font-size:12px;}
                 table{border-collapse:collapse;border:1px solid #CCC;background:#6089D4;}
@@ -265,10 +276,11 @@ class DataDict
                 </style>
                 </head>
                 <body>';
-        $data = $header . '<h1 style="text-align:center;">' . $title . '</h1>' .
-            '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) . '个数据表' . "&nbsp" . '生成时间：' . date('Y-m-d H:i:s') . '</p></header>'
-            . $this->htmlTable . '</body></html>';
-        echo $data;
+        $html .= '<h1 style="text-align:center;">' . $title . '</h1>';
+        $html .= '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) . '个数据表' . "&nbsp" . '生成时间：' . date('Y-m-d H:i:s') . '</p></header>';
+        $html .= $this->htmlTable;
+        $html .= '</body></html>';
+        echo $html;
     }
 
     protected function generateJson()
@@ -282,6 +294,10 @@ class DataDict
         return json_encode($tables);
     }
 
+    /**
+     * 生成markdown格式文档
+     * @return string
+     */
     protected function generateMd()
     {
         $title = $this->database . '数据字典';
@@ -341,5 +357,32 @@ class DataDict
 {$mark}
 EOT;
         return $md_tplt;
+    }
+
+    /**
+     * 指定单个表导出
+     * @param $table
+     * @return $this
+     */
+    public function setExportTable($table)
+    {
+        $this->exportTables[] = $table;
+        return $this;
+    }
+
+    /**
+     * 指定多个表导出
+     * @param $arr
+     * @return $this
+     */
+    public function setExportTables($arr)
+    {
+        $this->exportTables = $arr;
+        return $this;
+    }
+
+    public function __destruct()
+    {
+        $this->db = null;
     }
 }
