@@ -26,6 +26,10 @@ DataDict::init(['dbname'=>'your database','host'=>'your host','user'=>'username'
 DataDict::init(['dbname'=>'your database','host'=>'your host','user'=>'username','password'=>'password'])
     ->make('html'); 
     
+//浏览器输出pdf
+DataDict::init(['dbname'=>'your database','host'=>'your host','user'=>'username','password'=>'password'])
+    ->make('pdf');
+    
 //导出单个表
 DataDict::init(['dbname'=>'your database','host'=>'your host','user'=>'username','password'=>'password'])
     ->setExportTable('tablename')
