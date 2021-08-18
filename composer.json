@@ -3,7 +3,9 @@
     "description": "PHP导出MySQL数据库数据字典 可以导出为Word文档和Excel表格以及Markdown、HTML格式",
     "type": "library",
     "require": {
-        "php": ">=7.0"
+        "php": ">=7.0",
+        "tecnickcom/tcpdf": "6.4.*",
+        "ext-pdo": "*"
     },
     "license": "MIT",
     "autoload": {

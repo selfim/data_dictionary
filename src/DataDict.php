@@ -5,6 +5,7 @@ declare (strict_types=1);
 namespace DictionaryExport;
 
 use PDO;
+
 class DataDict
 {
     protected $db;
@@ -36,6 +37,8 @@ class DataDict
                 return $this->generateDoc();
             case 'xls':
                 return $this->generateXls();
+            case 'pdf':
+                return $this->generatePdf();
             default:
                 return $this->generateMd();
         }
@@ -81,7 +84,7 @@ class DataDict
         $html = '';
         foreach ($tables as $k => $v) {
             $html .= '<table  border="1" cellspacing="0" cellpadding="0" align="center">';
-            $html .= '<caption>' . $v ['name'] . '  ' . $v ['TABLE_COMMENT'] . '</caption>';
+            $html .= '<h2 align="center">' . $v ['name'] . '  ' . $v ['TABLE_COMMENT'] . '</h2>';
             $html .= '<tbody><tr><th>字段名</th><th>数据类型</th><th>默认值</th>
                         <th>允许非空</th>
             <th>自动递增</th><th>备注(字段数: ' . count($v['COLUMN']) . ')</th></tr>';
@@ -379,6 +382,83 @@ EOT;
     {
         $this->exportTables = $arr;
         return $this;
+    }
+
+    public function generatePdf($dest='I')
+    {
+        require_once __DIR__ . '/vendor/autoload.php';
+        $this->common();
+        $title = $this->database . '数据字典';
+        $html = '<!DOCTYPE html>
+              <html>
+              <meta charset="utf-8">
+              <title>' . $title . '数据字典</title>
+                <style>
+                body,td,th {font-family:"宋体"; font-size:12px;}
+                table{border-collapse:collapse;border:1px solid #CCC;background:#6089D4;}
+                table caption{text-align:left; background-color:#fff; line-height:2em; font-size:14px; font-weight:bold; }
+                table td{height:25px; font-size:12px; border:3px solid #fff; background-color:#f0f0f0; padding:5px;}
+                tr:hover td{ background-color:#f1f5fb; }
+                .c1{ width: 150px;}
+                .c2{ width: 130px;}
+                .c3{ width: 70px;}
+                .c4{ width: 80px;}
+                .c5{ width: 80px;}
+                .c6{ width: 300px;}
+                .c7{ width: 200px;}
+                .c8{ width: 515px;}
+                </style>
+                </head>
+                <body>';
+        $html .= '<h1 style="text-align:center;">' . $title . '</h1>';
+        $html .= '<header><p style="text-align:center;margin:20px auto;">总共：' . count($this->tables) . '个数据表' . "&nbsp" . '生成时间：' . date('Y-m-d H:i:s') . '</p></header>';
+        $html .= $this->htmlTable;
+        $html .= '</body></html>';
+        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        // set document information
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor($title);
+        $pdf->SetTitle($title);
+
+        $pdf->setPrintHeader();
+        $pdf->setPrintFooter();
+
+        // set default monospaced font
+        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+        // set margins
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+        // set auto page breaks
+        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+        // set image scale factor
+        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+        // Add a page
+        // This method has several options, check the source code documentation for more information.
+        $pdf->AddPage();
+
+        // set default font subsetting mode
+        $pdf->setFontSubsetting(true);
+        // Set font
+        // dejavusans is a UTF-8 Unicode font, if you only need to
+        // print standard ASCII chars, you can use core fonts like
+        // helvetica or times to reduce file size.
+        $pdf->SetFont('msungstdlight', '', 11, '', true);
+
+        // set text shadow effect
+        $pdf->setTextShadow(array('enabled' => false));
+        // Set some content to print
+        $pdf->writeHTML($html, true, false, true, false, '');
+        // reset pointer to the last page
+        $pdf->lastPage();
+        // ---------------------------------------------------------
+        // Close and output PDF document
+        // This method has several options, check the source code documentation for more information.
+        $pdf->Output($title . '.pdf', $dest);
     }
 
     public function __destruct()
