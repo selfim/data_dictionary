@@ -5,7 +5,7 @@ declare (strict_types=1);
 namespace DictionaryExport;
 
 use PDO;
-
+use TCPDF;
 class DataDict
 {
     protected $db;
@@ -386,7 +386,6 @@ EOT;
 
     public function generatePdf($dest='I')
     {
-        require_once __DIR__ . '/vendor/autoload.php';
         $this->common();
         $title = $this->database . '数据字典';
         $html = '<!DOCTYPE html>
